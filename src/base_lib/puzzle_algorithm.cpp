@@ -1,4 +1,4 @@
-#include "../../include/base-lib.h"
+#include <base-lib.h>
 
 using namespace baselib;
 
@@ -22,10 +22,9 @@ std::string PuzzleAlgorithm::getName() const
 	return std::string();
 }
 
-void PuzzleAlgorithm::printFormat(std::ostream& o)
-{
-}
+void PuzzleAlgorithm::printFormat(std::ostream& o) { }
 
 void PuzzleAlgorithm::runAlgorithm()
 {
+	// TODO
 }

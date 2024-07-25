@@ -1,4 +1,4 @@
-#include "../../include/slitherlink.h"
+#include <slitherlink.h>
 
 using namespace algorithms::slitherlink;
 
