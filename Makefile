@@ -1,6 +1,7 @@
 CXX = g++
-MKDIR_P = @mkdir
 CXXFLAGS = -std=c++17 -Wall -Iinclude
+
+MKDIR_P = @mkdir
 
 SRC_DIRS := $(wildcard src/*)
 OBJ_DIRS := $(patsubst src/%, obj/%, $(SRC_DIRS))
@@ -16,7 +17,7 @@ directories: $(OBJ_DIRS)
 $(OBJ_DIRS):
 	$(MKDIR_P) $(subst /,\,$@)
 
-$(TARGET): main.o $(OBJS) $(INCLUDE)
+$(TARGET): main.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 obj/%.o: src/%.cpp
