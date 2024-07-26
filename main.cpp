@@ -27,6 +27,15 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
+	if (result.count("l") > 0) {
+		cout << string("Algorithms:\n")
+			+ " slitherlink\n";
+		return 0;
+	}
+	if (result.count("h") > 0) {
+		cout << options.help();
+		return 0;
+	}
 	if (result.count("a") == 1) {
 		string value = result["a"].as<string>();
 		if (value == "slitherlink") algorithm = new algorithms::slitherlink::Algorithm();
@@ -35,11 +44,6 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 	}
-	if (result.count("l") > 0) {
-		cout << string("Algorithms:\n")
-			+ " slitherlink\n";
-		return 0;
-	}
 	if (result.count("i") == 1) {
 		if (algorithm) algorithm->setInput(result["i"].as<string>());
 	}
@@ -47,11 +51,10 @@ int main(int argc, char* argv[]) {
 		if (algorithm) algorithm->setOutput(result["o"].as<string>());
 	}
 	if (result.count("f") > 0) {
-		if (algorithm) algorithm->printFormat(cout);
-		return 0;
-	}
-	if (result.count("h") > 0) {
-		cout << options.help();
+		if (algorithm) {
+			algorithm->printFormat(cout);
+			delete algorithm;
+		}
 		return 0;
 	}
 
