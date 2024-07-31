@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <vector>
 #include <functional>
 
@@ -16,10 +18,11 @@ namespace baselib{
 		void setOutput(std::string value);
 		void runAlgorithm();
 
-		virtual std::string getName() const;
+		virtual std::string getName();
 		virtual void printFormat(std::ostream& o);
 	protected:
-		virtual void processFile(std::istream& o) = 0;
+		virtual void processFile(std::ifstream& inFile, std::ofstream& outFile, const std::string& fileName) = 0;
+		virtual void cleanUp() = 0;
 	};
 
 	class Index {
@@ -46,6 +49,7 @@ namespace baselib{
 	private:
 		int width;
 		int height;
+	protected:
 		T** tab;
 	public:
 		Board(int width, int height) : width(width), height(height)
@@ -62,8 +66,8 @@ namespace baselib{
 			}
 			delete[] tab;
 		}
-		inline int getWidth() { return width; }
-		inline int getHeight() { return height; }
+		inline int getWidth() const { return width; }
+		inline int getHeight() const { return height; }
 		void forEach(std::function <void(Index, T)> func)
 		{
 			for (int x = 0; x < width; x++) {
@@ -72,7 +76,7 @@ namespace baselib{
 				}
 			}
 		}
-		inline bool inRange(const Index& index) { return index.x >= 0 && index.x < width && index.y >= 0 && index.y < height; }
+		inline bool inRange(const Index& index) const { return index.x >= 0 && index.x < width && index.y >= 0 && index.y < height; }
 
 		T& operator [](const Index& idx)
 		{

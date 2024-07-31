@@ -1,11 +1,13 @@
 #include <base-lib.h>
 
-using namespace baselib;
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
-PuzzleAlgorithm::PuzzleAlgorithm()
-{
-	input = "./samples/" + getName() + "/in/";
-}
+using namespace baselib;
+namespace fs = std::filesystem;
+
+PuzzleAlgorithm::PuzzleAlgorithm() : input("./samples/<alg_name>/in"), output("./samples/<alg_name>/out") { }
 PuzzleAlgorithm::~PuzzleAlgorithm() { }
 void PuzzleAlgorithm::setInput(std::string value)
 {
@@ -17,7 +19,7 @@ void PuzzleAlgorithm::setOutput(std::string value)
 	output = value;
 }
 
-std::string PuzzleAlgorithm::getName() const
+std::string PuzzleAlgorithm::getName()
 {
 	return std::string();
 }
@@ -26,5 +28,52 @@ void PuzzleAlgorithm::printFormat(std::ostream& o) { }
 
 void PuzzleAlgorithm::runAlgorithm()
 {
-	// TODO
+    std::string toReplace = "<alg_name>";
+    std::string inputDir = input;
+    std::size_t pos = inputDir.find(toReplace);
+    if (pos != std::string::npos) inputDir.replace(pos, toReplace.length(), getName());
+    std::string outputDir = output;
+    pos = outputDir.find(toReplace);
+    if (pos != std::string::npos) outputDir.replace(pos, toReplace.length(), getName());
+
+    if (!fs::exists(inputDir)) {
+        fs::create_directories(inputDir);
+    }
+    if (!fs::exists(outputDir)) {
+        fs::create_directories(outputDir);
+    }
+
+    for (const auto& entry : fs::directory_iterator(inputDir)) {
+        if (entry.is_regular_file()) {
+            std::string inputFilePath = entry.path().string();
+            std::string fileName = entry.path().filename().string();
+            std::string outputFilePath = outputDir + "/" + fileName;
+
+            std::ifstream inFile(inputFilePath);
+            if (!inFile) {
+                std::cerr << "Failed to open input file: " << inputFilePath << std::endl;
+                continue;
+            }
+
+            std::ofstream outFile(outputFilePath);
+            if (!outFile) {
+                std::cerr << "Failed to open output file: " << outputFilePath << std::endl;
+                if (inFile.is_open()) inFile.close();
+                continue;
+            }
+
+            try {
+                processFile(inFile, outFile, fileName);
+            }
+            catch (const std::exception & e) {
+                std::cerr << "Failed process file: " << fileName << std::endl;
+                std::cerr << e.what() << std::endl;
+            }
+            cleanUp();
+
+            inFile.close();
+            outFile.close();
+        }
+    }
+
 }

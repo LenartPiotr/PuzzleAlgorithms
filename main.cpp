@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 		("l,list", "List possible puzzle algorithms")
 		("i,input", "Input directory - default = ./samples/<alg_name>/in/", value<string>())
 		("o,output", "Output directory - default = ./samples/<alg_name>/out/", value<string>())
-		("format", "Print selected algorithm file format (only with -a)")
+		("f,format", "Print selected algorithm file format (only with -a)")
 		("h,help", "Print help");
 	ParseResult result;
 	try {

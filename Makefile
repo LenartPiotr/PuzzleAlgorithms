@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++2a -Wall -Iinclude -O3
 
 MKDIR_P = @mkdir
 
