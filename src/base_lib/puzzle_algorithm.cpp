@@ -65,11 +65,18 @@ void PuzzleAlgorithm::runAlgorithm()
             try {
                 processFile(inFile, outFile, fileName);
             }
+            catch (const WrongFileFormatException& e) {
+                std::cerr << "Wrong file format: " << fileName << std::endl;
+            }
+            catch (const NoSolutionException& e) {
+                std::cerr << "No solution: " << fileName << std::endl;
+                cleanUp();
+            }
             catch (const std::exception & e) {
                 std::cerr << "Failed process file: " << fileName << std::endl;
                 std::cerr << e.what() << std::endl;
+                cleanUp();
             }
-            cleanUp();
 
             inFile.close();
             outFile.close();

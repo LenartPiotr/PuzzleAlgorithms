@@ -2,9 +2,10 @@
 
 using namespace baselib;
 
-baselib::IndexTransform::IndexTransform(const Index& hook, int width, int height) : hook(hook), areaWidth(width), areaHeight(height), flipX(false), flipY(false), rotation(0) { }
+baselib::IndexTransform::IndexTransform(int width, int height, bool flipX = false, bool flipY = false, int rotation = 0)
+    : areaWidth(width), areaHeight(height), flipX(flipX), flipY(flipY), rotation(rotation) { }
 
-Index baselib::IndexTransform::operator*(const Index& idx)
+Index baselib::IndexTransform::transform(const Index& idx) const
 {
     int x = idx.x;
     int y = idx.y;
@@ -28,5 +29,15 @@ Index baselib::IndexTransform::operator*(const Index& idx)
         x = h - y;
         y = t;
     }
-    return hook + Index(x, y);
+    return Index(x, y);
+}
+
+Index baselib::IndexTransform::operator*(const Index& idx)
+{
+    return transform(idx);
+}
+
+Index baselib::operator*(const Index& idx, const IndexTransform& transform)
+{
+    return transform.transform(idx);
 }

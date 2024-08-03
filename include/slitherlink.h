@@ -14,6 +14,8 @@ namespace algorithms {
 			int colorMargin;
 			int nextColor;
 		public:
+			bool updateFlag;
+		public:
 			ColorBoard(int width, int height);
 			void colorSame(std::vector<Index> indexes, std::vector<Index> oposite);
 			int mergeColors(const std::set<int>& colors);
@@ -29,6 +31,7 @@ namespace algorithms {
 		class Algorithm : public baselib::PuzzleAlgorithm {
 		protected:
 			ColorBoard* colorBoard;
+			Board<int>* numbers;
 		public:
 			Algorithm();
 			~Algorithm();
@@ -37,6 +40,12 @@ namespace algorithms {
 		protected:
 			void processFile(std::ifstream& inFile, std::ofstream& outFile, const std::string& fileName) override;
 			void cleanUp() override;
+
+			void findPatterns();
+			void mainLoop();
+
+			void stepCountNeighbours();
+			void stepCheckCrosses();
 		};
 	}
 }

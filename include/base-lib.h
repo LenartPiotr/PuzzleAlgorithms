@@ -6,6 +6,11 @@
 #include <functional>
 
 namespace baselib{
+
+	class AlgorithmException : public std::exception { };
+	class WrongFileFormatException : public AlgorithmException { };
+	class NoSolutionException : public AlgorithmException { };
+
 	class PuzzleAlgorithm {
 	private:
 		std::string input;
@@ -31,7 +36,7 @@ namespace baselib{
 		int y;
 		Index();
 		Index(int x, int y);
-		std::vector<Index> neighbours(bool, bool);
+		std::vector<Index> neighbours(bool sides, bool corners);
 		inline Index copy() { return Index(x, y); }
 
 		inline Index operator+(const Index& o) const { return Index(x + o.x, y + o.y); }
@@ -111,7 +116,6 @@ namespace baselib{
 
 	class IndexTransform {
 	private:
-		Index hook;
 		int areaWidth;
 		int areaHeight;
 	public:
@@ -119,7 +123,11 @@ namespace baselib{
 		bool flipY;
 		int rotation;
 
-		IndexTransform(const Index& hook, int width, int height);
+		IndexTransform(int width, int height, bool flipX = false, bool flipY = false, int rotation = 0);
+		Index transform(const Index& idx) const;
+
 		Index operator*(const Index& idx);
 	};
+
+	Index operator *(const Index& idx, const IndexTransform& transform);
 }
