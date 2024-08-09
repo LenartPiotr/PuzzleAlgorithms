@@ -82,6 +82,37 @@ int ColorBoard::mergeColors(const set<int>& colors)
     return minimumColor;
 }
 
+void ColorBoard::normalizeColors()
+{
+    set<int> colors;
+    int w = getWidth();
+    int h = getHeight();
+    for (int x = 0; x < w; x++)
+        for (int y = 0; y < h; y++) {
+            colors.insert(abs(tab[x][y]));
+        }
+    int num = 2;
+    auto it = colors.begin();
+    auto rit = colors.rbegin();
+    while (it != colors.end() && rit != colors.rend() && *it <= *rit) {
+        while (it != colors.end() && *it <= *rit && *it <= num) {
+            if (*it == num) num++;
+            it++;
+        }
+        if (it != colors.end() && *it <= *rit) {
+            int from = *rit;
+            int to = num;
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++) {
+                    if (tab[x][y] == from) tab[x][y] = to;
+                    if (tab[x][y] == -from) tab[x][y] = -to;
+                }
+            *rit++;
+            num++;
+        }
+    }
+}
+
 int& ColorBoard::operator[](const Index& idx)
 {
 	if (inRange(idx)) {
@@ -172,6 +203,7 @@ void Algorithm::processFile(ifstream& inFile, ofstream& outFile, const string& f
     findPatterns();
     mainLoop();
 
+    colorBoard->normalizeColors();
     outFile << *colorBoard << endl;
 }
 
@@ -231,74 +263,159 @@ void Algorithm::findPatterns()
         }
     }
 
-    // find 0
+    // find 0, fill update numbers
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
-            if ((*numbers)[Index(x, y)] != 0) continue;
-            auto indexes = Index(x, y).neighbours(true, false);
-            indexes.push_back(Index(x, y));
-            colorBoard->colorSame(indexes);
+            int num = (*numbers)[Index(x, y)];
+            if (num == -1) continue;
+            if (num == 0) {
+                auto indexes = Index(x, y).neighbours(true, false);
+                indexes.push_back(Index(x, y));
+                colorBoard->colorSame(indexes);
+            }
+            else {
+                updateNumbers.push_back(Index(x, y));
+            }
         }
     }
 }
 
 void Algorithm::mainLoop()
 {
+    int limit = 10000;
     do {
         colorBoard->updateFlag = false;
 
         stepCountNeighbours();
         stepCheckCrosses();
 
+        if (--limit == 0) {
+            cout << "LIMIT!" << endl;
+            break;
+        }
+
     } while (colorBoard->updateFlag);
 }
 
 void Algorithm::stepCountNeighbours()
 {
-    int w = colorBoard->getWidth();
-    int h = colorBoard->getHeight();
-    for (int x = 0; x < w; x++) {
-        for (int y = 0; y < h; y++) {
-            Index hook(x, y);
-            int num = (*numbers)[hook];
-            if (num == -1) continue;
-            int color = (*colorBoard)[hook];
+    vector<Index> toRemove;
+    for (const Index& hook : updateNumbers) {
+        int num = (*numbers)[hook];
+        if (num == -1) continue;
+        int color = (*colorBoard)[hook];
 
-            vector<Index> neighours = hook.neighbours(true, false);
-            vector<int> colors;
-            for (const Index& idx : neighours) colors.push_back((*colorBoard)[idx]);
-            
-            // Full known
-            if (color != 0) {
-                int sameColorsCount = 0;
-                int revColorsCount = 0;
-                for (const int& col : colors) {
-                    if (col == color) sameColorsCount++;
-                    else if (col == -color) revColorsCount++;
+        vector<Index> neighours = hook.neighbours(true, false);
+        vector<int> colors;
+        for (const Index& idx : neighours) colors.push_back((*colorBoard)[idx]);
+
+        // Full known
+        if (color != 0) {
+            int sameColorsCount = 0;
+            int revColorsCount = 0;
+            for (const int& col : colors) {
+                if (col == color) sameColorsCount++;
+                else if (col == -color) revColorsCount++;
+            }
+
+            if (sameColorsCount + revColorsCount != 4) {
+                if (sameColorsCount == 4 - num) {
+                    vector<Index> rest;
+                    for (int i = 0; i < 4; i++) {
+                        if (colors[i] != color) rest.push_back(neighours[i]);
+                    }
+                    colorBoard->colorSame({ hook }, rest);
+                    toRemove.push_back(hook);
+                    continue;
                 }
 
-                if (sameColorsCount + revColorsCount != 4) {
-                    if (sameColorsCount == 4 - num) {
-                        vector<Index> rest;
-                        for (int i = 0; i < 4; i++) {
-                            if (colors[i] != color) rest.push_back(neighours[i]);
-                        }
-                        colorBoard->colorSame({ hook }, rest);
-                        continue;
+                if (revColorsCount == num) {
+                    vector<Index> rest;
+                    for (int i = 0; i < 4; i++) {
+                        if (-colors[i] != color) rest.push_back(neighours[i]);
                     }
+                    rest.push_back(hook);
+                    colorBoard->colorSame(rest);
+                    toRemove.push_back(hook);
+                    continue;
+                }
+            }
+        }
 
-                    if (revColorsCount == num) {
-                        vector<Index> rest;
-                        for (int i = 0; i < 4; i++) {
-                            if (-colors[i] != color) rest.push_back(neighours[i]);
-                        }
-                        rest.push_back(hook);
-                        colorBoard->colorSame(rest);
-                        continue;
+        /*
+        * TODO - fix error
+        * 
+        
+        // Partial known by double color
+        int colorDouble = 0;
+        int indexColorDouble = 0;
+        for (int i = 0; i < 4; i++) {
+            if (colors[i] != 0) {
+                for (int j = i + 1; j < 4; j++) {
+                    if (colors[i] == colors[j]) {
+                        colorDouble = colors[i];
+                        indexColorDouble = i;
                     }
                 }
             }
         }
+        if (colorDouble != 0) {
+            vector<Index> restIndexes;
+            for (int i = 0; i < 4; i++) {
+                if (colors[i] != colorDouble) restIndexes.push_back(neighours[i]);
+            }
+            switch (num) {
+            case 1:
+                colorBoard->colorSame({ hook, neighours[indexColorDouble] });
+                if (restIndexes.size() == 2) colorBoard->colorSame({ restIndexes[0] }, { restIndexes[1] });
+                break;
+            case 2:
+                colorBoard->colorSame({ neighours[indexColorDouble] }, restIndexes);
+                break;
+            case 3:
+                colorBoard->colorSame({ hook }, { neighours[indexColorDouble] });
+                if (restIndexes.size() == 2) colorBoard->colorSame({ restIndexes[0] }, { restIndexes[1] });
+                break;
+            }
+            continue;
+        }
+
+        // Partial known by opposite color
+        for (int i = 0; i < 4; i++) {
+            if (colors[i] != 0) {
+                for (int j = i + 1; j < 4; j++) {
+                    if (colors[i] == -colors[j]) {
+                        colorDouble = colors[i];
+                        indexColorDouble = i;
+                    }
+                }
+            }
+        }
+        if (colorDouble != 0) {
+            vector<Index> restIndexes;
+            for (int i = 0; i < 4; i++) {
+                if (colors[i] != colorDouble && colors[i] != -colorDouble) restIndexes.push_back(neighours[i]);
+            }
+            switch (num) {
+            case 1:
+                restIndexes.push_back(hook);
+                colorBoard->colorSame(restIndexes);
+                break;
+            case 2:
+                if (restIndexes.size() == 2) colorBoard->colorSame({ restIndexes[0] }, { restIndexes[1] });
+                break;
+            case 3:
+                colorBoard->colorSame({ hook }, { restIndexes });
+                break;
+            }
+            continue;
+        }
+        */
+    }
+
+    // Remove indexes
+    for (const Index& idx : toRemove) {
+        updateNumbers.erase(find(updateNumbers.begin(), updateNumbers.end(), idx));
     }
 }
 

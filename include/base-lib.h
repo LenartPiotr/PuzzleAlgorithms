@@ -36,7 +36,7 @@ namespace baselib{
 		int y;
 		Index();
 		Index(int x, int y);
-		std::vector<Index> neighbours(bool sides, bool corners);
+		std::vector<Index> neighbours(bool sides, bool corners) const;
 		inline Index copy() { return Index(x, y); }
 
 		inline Index operator+(const Index& o) const { return Index(x + o.x, y + o.y); }

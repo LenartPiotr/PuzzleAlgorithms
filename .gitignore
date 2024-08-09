@@ -3,6 +3,7 @@
 # Samples output
 
 /samples/*/out/
+*.bat
 
 ## C++ gitignore
 

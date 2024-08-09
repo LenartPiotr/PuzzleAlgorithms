@@ -7,7 +7,7 @@ using namespace std;
 Index::Index() : x(0), y(0) { }
 Index::Index(int x, int y) : x(x), y(y) { }
 
-vector<Index> Index::neighbours(bool sides = true, bool corners = true)
+vector<Index> Index::neighbours(bool sides = true, bool corners = true) const
 {
 	vector<Index> result;
 	if (sides) {

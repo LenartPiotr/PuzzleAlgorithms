@@ -19,6 +19,7 @@ namespace algorithms {
 			ColorBoard(int width, int height);
 			void colorSame(std::vector<Index> indexes, std::vector<Index> oposite);
 			int mergeColors(const std::set<int>& colors);
+			void normalizeColors();
 
 			int& operator [](const Index& idx);
 			const int& operator [](const Index& idx) const;
@@ -32,6 +33,7 @@ namespace algorithms {
 		protected:
 			ColorBoard* colorBoard;
 			Board<int>* numbers;
+			std::vector<Index> updateNumbers;
 		public:
 			Algorithm();
 			~Algorithm();
