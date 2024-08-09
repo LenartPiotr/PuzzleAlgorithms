@@ -2,7 +2,7 @@
 
 using namespace baselib;
 
-baselib::IndexTransform::IndexTransform(int width, int height, bool flipX = false, bool flipY = false, int rotation = 0)
+baselib::IndexTransform::IndexTransform(int width, int height, bool flipX, bool flipY, int rotation)
     : areaWidth(width), areaHeight(height), flipX(flipX), flipY(flipY), rotation(rotation) { }
 
 Index baselib::IndexTransform::transform(const Index& idx) const
