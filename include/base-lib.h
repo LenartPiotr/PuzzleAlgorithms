@@ -98,6 +98,15 @@ namespace baselib{
 			throw std::out_of_range("Index out of range");
 		}
 
+		T* operator [](const int& x)
+		{
+			return tab[x];
+		}
+		const T* operator [](const int& x) const
+		{
+			return tab[x];
+		}
+
 		template <typename T2>
 		friend std::ostream& operator<<(std::ostream&, const Board<T2>&);
 	};

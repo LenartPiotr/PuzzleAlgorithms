@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <functional>
 
 using namespace algorithms::slitherlink;
 using namespace std;
@@ -129,6 +130,16 @@ const int& ColorBoard::operator[](const Index& idx) const
     return colorMargin;
 }
 
+int* ColorBoard::operator[](const int& x)
+{
+    return tab[x];
+}
+
+const int* ColorBoard::operator[](const int& x) const
+{
+    return tab[x];
+}
+
 ostream& algorithms::slitherlink::operator<<(ostream& os, const ColorBoard& board)
 {
     int width = board.getWidth();
@@ -205,6 +216,7 @@ void Algorithm::processFile(ifstream& inFile, ofstream& outFile, const string& f
 
     colorBoard->normalizeColors();
     outFile << *colorBoard << endl;
+    outFile << *this << endl;
 }
 
 void Algorithm::cleanUp()
@@ -341,10 +353,6 @@ void Algorithm::stepCountNeighbours()
                 }
             }
         }
-
-        /*
-        * TODO - fix error
-        * 
         
         // Partial known by double color
         int colorDouble = 0;
@@ -410,7 +418,6 @@ void Algorithm::stepCountNeighbours()
             }
             continue;
         }
-        */
     }
 
     // Remove indexes
@@ -450,4 +457,66 @@ void Algorithm::stepCheckCrosses()
             }
         }
     }
+}
+
+ostream& algorithms::slitherlink::operator<<(ostream& os, const Algorithm& a)
+{
+    string h = reinterpret_cast<const char*>(u8"\u2500");
+    string v = reinterpret_cast<const char*>(u8"\u2502");
+    string rb = reinterpret_cast<const char*>(u8"\u250C");
+    string lb = reinterpret_cast<const char*>(u8"\u2510");
+    string rt = reinterpret_cast<const char*>(u8"\u2514");
+    string lt = reinterpret_cast<const char*>(u8"\u2518");
+
+    int width = a.numbers->getWidth();
+    int height = a.numbers->getHeight();
+
+    ColorBoard& col = *a.colorBoard;
+    Board<int>& num = *a.numbers;
+    
+    function<string(int, int)> getCorner = [&col, h, v, rb, lb, rt, lt](int x, int y) {
+        int clt = col[Index(x, y)];
+        if (clt == 0) return string(" ");
+        int crt = col[Index(x + 1, y)];
+        int clb = col[Index(x, y + 1)];
+        int crb = col[Index(x + 1, y + 1)];
+        if (clt == crt) {
+            if (clb == crb && clb == -clt) return h;
+            if (clb == -crb && clb == -clt) return lb;
+            if (clb == -crb && clb == clt) return rb;
+        }
+        else if (clt == -crt) {
+            if (clb == -crb && clb == clt) return v;
+            if (clb == crb && clb == -clt) return lt;
+            if (clb == crb && clb == clt) return rt;
+        }
+        return string(" ");
+    };
+
+    for (int y = -1; y < height; y++) {
+        if (y != -1) {
+            if (col[Index(-1, y)] == -col[Index(0, y)] && col[Index(-1, y)] != 0)
+                os << v;
+            else os << " ";
+            for (int x = 0; x < width; x++) {
+                if (num[Index(x, y)] != -1) os << num[Index(x, y)];
+                else os << " ";
+                if (col[Index(x, y)] == -col[Index(x + 1, y)] && col[Index(x, y)] != 0)
+                    os << v;
+                else os << " ";
+            }
+        }
+        os << endl;
+        
+        os << getCorner(-1, y);
+        for (int x = 0; x < width; x++) {
+            if (col[Index(x, y)] == -col[Index(x, y + 1)] && col[Index(x, y)] != 0)
+                os << h;
+            else os << " ";
+            os << getCorner(x, y);
+        }
+        os << endl;
+    }
+
+    return os;
 }

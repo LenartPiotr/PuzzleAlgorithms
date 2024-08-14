@@ -23,6 +23,9 @@ namespace algorithms {
 
 			int& operator [](const Index& idx);
 			const int& operator [](const Index& idx) const;
+			
+			int* operator [](const int& x);
+			const int* operator [](const int& x) const;
 
 			friend std::ostream& operator<<(std::ostream&, const ColorBoard&);
 		};
@@ -48,6 +51,11 @@ namespace algorithms {
 
 			void stepCountNeighbours();
 			void stepCheckCrosses();
+			
+		public:
+			friend std::ostream& operator<<(std::ostream&, const Algorithm&);
 		};
+		
+		std::ostream& operator<<(std::ostream&, const Algorithm&);
 	}
 }
