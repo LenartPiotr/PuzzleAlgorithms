@@ -5,6 +5,7 @@ using namespace baselib;
 using namespace std;
 
 Index::Index() : x(0), y(0) { }
+Index::Index(Index& other) : x(other.x), y(other.y) { }
 Index::Index(int x, int y) : x(x), y(y) { }
 
 vector<Index> Index::neighbours(bool sides = true, bool corners = true) const
