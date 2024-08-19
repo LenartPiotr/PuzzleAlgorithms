@@ -51,11 +51,34 @@ namespace algorithms {
 
 			void stepCountNeighbours();
 			void stepCheckCrosses();
+			void stepExpandAreas();
 			
 		public:
 			friend std::ostream& operator<<(std::ostream&, const Algorithm&);
 		};
 		
 		std::ostream& operator<<(std::ostream&, const Algorithm&);
+
+		struct BFSAreaResult {
+			int color;
+			bool connectOutside;
+			std::set<Index> area;
+			std::set<Index> connections;
+		};
+
+		class BFSAreaVerifier {
+		private:
+			Board<bool> visited;
+			const ColorBoard& colors;
+
+		public:
+			BFSAreaVerifier(const ColorBoard& colors);
+
+		private:
+			BFSAreaResult bfs(Index start);
+
+		public:
+			std::vector<BFSAreaResult> findAll();
+		};
 	}
 }

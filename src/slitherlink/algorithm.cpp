@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <queue>
 #include <iomanip>
 #include <string>
 #include <cmath>
@@ -213,10 +214,10 @@ void Algorithm::processFile(ifstream& inFile, ofstream& outFile, const string& f
 
     findPatterns();
     mainLoop();
-
-    colorBoard->normalizeColors();
-    outFile << *colorBoard << endl;
-    outFile << *this << endl;
+    
+    // colorBoard->normalizeColors();
+    // outFile << *colorBoard << endl;
+    outFile << *this;
 }
 
 void Algorithm::cleanUp()
@@ -296,16 +297,20 @@ void Algorithm::mainLoop()
 {
     int limit = 10000;
     do {
-        colorBoard->updateFlag = false;
+        do {
+            colorBoard->updateFlag = false;
 
-        stepCountNeighbours();
-        stepCheckCrosses();
+            stepCountNeighbours();
+            stepCheckCrosses();
 
-        if (--limit == 0) {
-            cout << "LIMIT!" << endl;
-            break;
-        }
+            if (--limit == 0) {
+                cout << "LIMIT!" << endl;
+                break;
+            }
 
+        } while (colorBoard->updateFlag);
+        
+        stepExpandAreas();
     } while (colorBoard->updateFlag);
 }
 
@@ -459,6 +464,56 @@ void Algorithm::stepCheckCrosses()
     }
 }
 
+void Algorithm::stepExpandAreas()
+{
+    BFSAreaVerifier bfs(*colorBoard);
+
+    vector<BFSAreaResult> areas = bfs.findAll();
+
+    int endAreasCount = 0;
+
+    for (auto& area : areas) {
+        if (area.color == -1) endAreasCount++;
+        if (!area.connectOutside) {
+            if (area.connections.size() == 1) colorBoard->colorSame({ *area.connections.begin(), *area.area.begin() });
+            else if (area.connections.size() > 1) {
+                int connectionsColor = (*colorBoard)[*area.connections.begin()];
+                bool oneColor = true;
+                for (const Index& i : area.connections) {
+                    if ((*colorBoard)[i] != connectionsColor) {
+                        oneColor = false;
+                        break;
+                    }
+                }
+                if (oneColor) {
+                    colorBoard->colorSame({ *area.connections.begin(), *area.area.begin() });
+                }
+            }
+        }
+    }
+
+    if (endAreasCount > 1) {
+        for (auto& area : areas) {
+            if (area.color == -1) {
+                if (area.connections.size() == 1) colorBoard->colorSame({ *area.connections.begin(), *area.area.begin() });
+                else if (area.connections.size() > 1) {
+                    int connectionsColor = (*colorBoard)[*area.connections.begin()];
+                    bool oneColor = true;
+                    for (const Index& i : area.connections) {
+                        if ((*colorBoard)[i] != connectionsColor) {
+                            oneColor = false;
+                            break;
+                        }
+                    }
+                    if (oneColor) {
+                        colorBoard->colorSame({ *area.connections.begin(), *area.area.begin() });
+                    }
+                }
+            }
+        }
+    }
+}
+
 ostream& algorithms::slitherlink::operator<<(ostream& os, const Algorithm& a)
 {
     string h = reinterpret_cast<const char*>(u8"\u2500");
@@ -505,8 +560,8 @@ ostream& algorithms::slitherlink::operator<<(ostream& os, const Algorithm& a)
                     os << v;
                 else os << " ";
             }
+            os << endl;
         }
-        os << endl;
         
         os << getCorner(-1, y);
         for (int x = 0; x < width; x++) {
@@ -519,4 +574,62 @@ ostream& algorithms::slitherlink::operator<<(ostream& os, const Algorithm& a)
     }
 
     return os;
+}
+
+// BFSAreaVerifier
+
+BFSAreaVerifier::BFSAreaVerifier(const ColorBoard& colors) : visited(colors.getWidth(), colors.getHeight()), colors(colors) { }
+
+BFSAreaResult BFSAreaVerifier::bfs(Index start)
+{
+    int c = colors[start];
+
+    BFSAreaResult result;
+    result.color = c;
+    result.connectOutside = false;
+
+    queue<Index> q;
+    q.push(start);
+
+    while (!q.empty()) {
+        Index i = q.front();
+        q.pop();
+        if (!visited.inRange(i)) {
+            result.connectOutside = true;
+            continue;
+        }
+        if (colors[i] != c) {
+            if (colors[i] != -c) result.connections.insert(i);
+            continue;
+        }
+        if (visited[i]) {
+            continue;
+        }
+        result.area.insert(i);
+        for (Index& idx : i.neighbours(true, false)) {
+            q.push(idx);
+        }
+        visited[i] = true;
+    }
+
+    return result;
+}
+
+vector<BFSAreaResult> BFSAreaVerifier::findAll()
+{
+    vector<BFSAreaResult> results;
+    int w = colors.getWidth();
+    int h = colors.getHeight();
+
+    for (int x = 0; x < w; x++)
+        for (int y = 0; y < h; y++)
+            visited[x][y] = false;
+
+    for (int x = 0; x < w; x++) {
+        for (int y = 0; y < h; y++) {
+            if (!visited[x][y] && colors[x][y] != 0) results.push_back(bfs(Index(x, y)));
+        }
+    }
+
+    return results;
 }

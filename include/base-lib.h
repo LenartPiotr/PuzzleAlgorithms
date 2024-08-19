@@ -73,7 +73,7 @@ namespace baselib{
 		int x;
 		int y;
 		Index();
-		Index(Index& other);
+		Index(const Index& other);
 		Index(int x, int y);
 		/**
 		* Returns the coordinates of the neighboring indices
@@ -88,6 +88,7 @@ namespace baselib{
 		inline Index operator-(const Index& o) const { return Index(x - o.x, y - o.y); }
 		inline bool operator==(const Index& o) const { return x == o.x && y == o.y; }
 		inline bool operator!=(const Index& o) const { return x != o.x || y != o.y; }
+		inline bool operator<(const Index& o) const { return y < o.y || (y == o.y && x < o.x); }
 
 		friend std::ostream& operator<<(std::ostream&, const Index&);
 	};
