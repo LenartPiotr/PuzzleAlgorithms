@@ -23,6 +23,7 @@ ColorBoard::ColorBoard(int width, int height) : Board(width, height), colorMargi
 
 void ColorBoard::colorSame(vector<Index> indexes, vector<Index> oposite = vector<Index>())
 {
+    // First check how many color are in passed indexes.
     set<int> group;
     bool anyChange = false;
     for (const Index& idx : indexes) {
