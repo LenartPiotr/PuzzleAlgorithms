@@ -1,14 +1,21 @@
 #include <iostream>
+#include <vector>
 
 #include <cxxopts.hpp>
 #include <base-lib.h>
+
 #include <slitherlink.h>
+#include <sudoku.h>
 
 using namespace std;
 using namespace cxxopts;
 
 int main(int argc, char* argv[]) {
-	baselib::PuzzleAlgorithm* algorithm = NULL;
+	shared_ptr<baselib::PuzzleAlgorithm> algorithm = nullptr;
+
+	vector<shared_ptr<baselib::PuzzleAlgorithm>> all_algorithms;
+	all_algorithms.push_back(make_shared<algorithms::slitherlink::Algorithm>());
+	all_algorithms.push_back(make_shared<algorithms::sudoku::Algorithm>());
 
 	Options options("PuzzleAlgorithm", "Algorithms and generators for popular puzzles");
 	options.add_options()
@@ -28,8 +35,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (result.count("l") > 0) {
-		cout << string("Algorithms:\n")
-			+ " slitherlink\n";
+		for (const auto& alg : all_algorithms) {
+			cout << alg->getName() << endl;
+		}
 		return 0;
 	}
 	if (result.count("h") > 0) {
@@ -38,8 +46,10 @@ int main(int argc, char* argv[]) {
 	}
 	if (result.count("a") == 1) {
 		string value = result["a"].as<string>();
-		if (value == "slitherlink") algorithm = new algorithms::slitherlink::Algorithm();
-		else {
+		for (auto& alg : all_algorithms) {
+			if (value == alg->getName()) algorithm = alg;
+		}
+		if (algorithm == nullptr) {
 			cout << "Use --list to show all possible algorithms" << endl;
 			return 0;
 		}
@@ -53,7 +63,6 @@ int main(int argc, char* argv[]) {
 	if (result.count("f") > 0) {
 		if (algorithm) {
 			algorithm->printFormat(cout);
-			delete algorithm;
 		}
 		return 0;
 	}
@@ -71,6 +80,5 @@ int main(int argc, char* argv[]) {
 		cout << "Exception\n";
 		cout << e.what();
 	}
-	if (algorithm) delete algorithm;
 	return 0;
 }

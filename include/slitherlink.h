@@ -88,7 +88,7 @@ namespace algorithms {
 			void mainLoop();
 
 			/**
-			* For each number, he checks his own and his neighbors' colors, trying to apply the rules.
+			* For each number, it checks its own and his neighbors' colors, trying to apply the rules.
 			*/
 			void stepCountNeighbours();
 			void stepCheckCrosses();
