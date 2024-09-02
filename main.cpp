@@ -23,7 +23,8 @@ int main(int argc, char* argv[]) {
 		("l,list", "List possible puzzle algorithms")
 		("i,input", "Input directory - default = ./samples/<alg_name>/in/", value<string>())
 		("o,output", "Output directory - default = ./samples/<alg_name>/out/", value<string>())
-		("f,format", "Print selected algorithm file format (only with -a)")
+		("f,format", "Print selected algorithm file format")
+		("t,time", "Measure time for each file")
 		("h,help", "Print help");
 	ParseResult result;
 	try {
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 	try {
 		if (algorithm) {
-			algorithm->runAlgorithm();
+			algorithm->runAlgorithm(result.count("t") > 0);
 		}
 		else {
 			cout << options.help();

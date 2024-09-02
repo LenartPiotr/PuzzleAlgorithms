@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <chrono>
 
 using namespace baselib;
 namespace fs = std::filesystem;
@@ -26,7 +27,7 @@ std::string PuzzleAlgorithm::getName()
 
 void PuzzleAlgorithm::printFormat(std::ostream& o) { }
 
-void PuzzleAlgorithm::runAlgorithm()
+void PuzzleAlgorithm::runAlgorithm(bool measureTime)
 {
     std::string toReplace = "<alg_name>";
     std::string inputDir = input;
@@ -63,7 +64,21 @@ void PuzzleAlgorithm::runAlgorithm()
             }
 
             try {
-                processFile(inFile, outFile, fileName);
+                std::cout << "File: " << fileName << std::endl;
+
+                auto start_time = std::chrono::high_resolution_clock::now();
+                processFile(inFile, outFile);
+                auto end_time = std::chrono::high_resolution_clock::now();
+
+                if (measureTime) {
+                    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+                    auto milliseconds = duration.count();
+
+                    auto seconds = milliseconds / 1000;
+                    milliseconds %= 1000;
+
+                    std::cout << "Duration: " << seconds << ":" << milliseconds << std::endl;
+                }
             }
             catch (const WrongFileFormatException& e) {
                 std::cerr << "Wrong file format: " << fileName << std::endl;

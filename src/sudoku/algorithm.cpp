@@ -30,9 +30,7 @@ void Algorithm::printFormat(ostream& o) {
 		"       6 \n\n";
 }
 
-void Algorithm::processFile(ifstream& inFile, ofstream& outFile, const string& fileName) {
-	cout << "File: " << fileName << endl;
-
+void Algorithm::processFile(ifstream& inFile, ofstream& outFile) {
 	prepare(inFile);
 	
 	if (mainLoop()) {

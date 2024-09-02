@@ -78,7 +78,7 @@ namespace algorithms {
 			std::string getName() override;
 			void printFormat(std::ostream& o) override;
 		protected:
-			void processFile(std::ifstream& inFile, std::ofstream& outFile, const std::string& fileName) override;
+			void processFile(std::ifstream& inFile, std::ofstream& outFile) override;
 			void cleanUp() override;
 
 			/**

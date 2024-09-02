@@ -39,7 +39,7 @@ namespace baselib{
 		/**
 		* Run the algorithm for each file in the input folder
 		*/
-		void runAlgorithm();
+		void runAlgorithm(bool measureTime);
 
 		virtual std::string getName();
 		/**
@@ -57,7 +57,7 @@ namespace baselib{
 		* @param fileName
 		*	name of current process file
 		*/
-		virtual void processFile(std::ifstream& inFile, std::ofstream& outFile, const std::string& fileName) = 0;
+		virtual void processFile(std::ifstream& inFile, std::ofstream& outFile) = 0;
 		/**
 		* The function is always called after processFile.
 		* It should be used to free variables before running the algorithm for the next file.

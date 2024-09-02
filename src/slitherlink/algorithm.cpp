@@ -187,9 +187,8 @@ void Algorithm::printFormat(ostream& o)
 	o << "21-2\n---2\n-3-1\n3-22\n\n";
 }
 
-void Algorithm::processFile(ifstream& inFile, ofstream& outFile, const string& fileName)
+void Algorithm::processFile(ifstream& inFile, ofstream& outFile)
 {
-    cout << "File: " << fileName << endl;
     string line;
     vector<string> lines;
     while (std::getline(inFile, line)) {
