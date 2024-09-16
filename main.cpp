@@ -6,6 +6,7 @@
 
 #include <slitherlink.h>
 #include <sudoku.h>
+#include <signpost.h>
 
 using namespace std;
 using namespace cxxopts;
@@ -16,6 +17,7 @@ int main(int argc, char* argv[]) {
 	vector<shared_ptr<baselib::PuzzleAlgorithm>> all_algorithms;
 	all_algorithms.push_back(make_shared<algorithms::slitherlink::Algorithm>());
 	all_algorithms.push_back(make_shared<algorithms::sudoku::Algorithm>());
+	all_algorithms.push_back(make_shared<algorithms::signpost::Algorithm>());
 
 	Options options("PuzzleAlgorithm", "Algorithms and generators for popular puzzles");
 	options.add_options()
