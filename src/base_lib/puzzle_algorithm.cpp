@@ -85,13 +85,12 @@ void PuzzleAlgorithm::runAlgorithm(bool measureTime)
             }
             catch (const NoSolutionException& e) {
                 std::cerr << "No solution: " << fileName << std::endl;
-                cleanUp();
             }
             catch (const std::exception & e) {
                 std::cerr << "Failed process file: " << fileName << std::endl;
                 std::cerr << e.what() << std::endl;
-                cleanUp();
             }
+            cleanUp();
 
             inFile.close();
             outFile.close();

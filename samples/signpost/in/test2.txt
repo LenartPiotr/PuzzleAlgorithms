@@ -1,0 +1,7 @@
+b1 b20 bl br l bl bl
+br br br rt l br l
+b br b r t bl32 l
+r rb t l36 r br t16
+br3 b7 tr r bl l tl
+tr l4 br29 t tr tl45 t
+tr t r t r tr e49

@@ -36,9 +36,9 @@ void Algorithm::prepare(std::ifstream& in) {
 		if (!line.empty()) lines.push_back(line);
 	}
 
-	int height = lines.size();
+	height = lines.size();
 	if (height == 0) throw baselib::WrongFileFormatException();
-	int width = 1;
+	width = 1;
 	for (auto it = lines[0].begin(); it != lines[0].end(); it++) {
 		if (*it == ' ') width++;
 	}
@@ -92,15 +92,31 @@ void Algorithm::prepare(std::ifstream& in) {
 void Algorithm::processFile(ifstream& inFile, ofstream& outFile) {
 	prepare(inFile);
 
-	simplifyGraph();
+	mainLoop();
 
-	printNodes(cout);
+	outFile << (*this);
 }
 
-void Algorithm::cleanUp() { }
+void Algorithm::cleanUp() {
+	nodes.clear();
+	ranges.clear();
+}
+
+void Algorithm::mainLoop() {
+	do {
+		do {
+			updateFlag = false;
+			simplifyGraph();
+			connectRanges();
+		} while (!updateFlag);
+		findPaths();
+	} while (!updateFlag);
+}
 
 void Algorithm::disconnect(int prev, int next)
 {
+	updateFlag = true;
+
 	auto& nextVec = nodes[prev].next;
 	auto& prevVec = nodes[next].prev;
 	nextVec.erase(std::remove(nextVec.begin(), nextVec.end(), next), nextVec.end());
@@ -109,6 +125,10 @@ void Algorithm::disconnect(int prev, int next)
 
 void Algorithm::connect(int prev, int next)
 {
+	if (nodes[prev].nextNode != -1) return;
+
+	updateFlag = true;
+
 	// setup nodes
 	
 	nodes[prev].nextNode = next;
@@ -139,6 +159,9 @@ void Algorithm::connect(int prev, int next)
 	
 	// Complete the order
 
+	int rangeStart = prev;
+	int rangeEnd = next;
+
 	if (nodes[prev].order == -1 && nodes[next].order != -1) {
 		int idx = next;
 		int order = nodes[next].order;
@@ -147,6 +170,8 @@ void Algorithm::connect(int prev, int next)
 			idx = nodes[idx].prevNode;
 			nodes[idx].order = --order;
 		}
+
+		rangeStart = idx;
 	}
 
 	if (nodes[prev].order != -1 && nodes[next].order == -1) {
@@ -157,6 +182,8 @@ void Algorithm::connect(int prev, int next)
 			idx = nodes[idx].nextNode;
 			nodes[idx].order = ++order;
 		}
+
+		rangeEnd = idx;
 	}
 
 	// Remomve connections from extreme points to each other
@@ -168,6 +195,40 @@ void Algorithm::connect(int prev, int next)
 	while (nodes[backwardIdx].prevNode != -1) backwardIdx = nodes[backwardIdx].prevNode;
 
 	disconnect(forwardIdx, backwardIdx);
+
+	// Add node to ranges
+
+	int rangeStartOrder = nodes[rangeStart].order;
+	int rangeEndOrder = nodes[rangeEnd].order;
+
+	if (rangeStartOrder != -1 && rangeEndOrder != -1) {
+		
+		// Try expand range with already existing node
+		auto it = std::find_if(ranges.begin(), ranges.end(), [rangeStartOrder](Range r) { return r.endOrder == rangeStartOrder; });
+		if (it != ranges.end()) {
+			it->endOrder = rangeEndOrder;
+			it->endNode = rangeEnd;
+		}
+		else {
+			// Create new range
+			for (it = ranges.begin(); it != ranges.end() && it->endOrder < rangeStartOrder; it++);
+			Range newRange;
+			newRange.startNode = rangeStart;
+			newRange.endNode = rangeEnd;
+			newRange.startOrder = rangeStartOrder;
+			newRange.endOrder = rangeEndOrder;
+			it = ranges.insert(it, newRange);
+		}
+
+		// Check if new range should be connected to next one
+		auto nextRangeIt = it + 1;
+		if (nextRangeIt != ranges.end() && nextRangeIt->startOrder == it->endOrder) {
+			// Join two ranges
+			it->endNode = nextRangeIt->endNode;
+			it->endOrder = nextRangeIt->endOrder;
+			ranges.erase(nextRangeIt);
+		}
+	}
 }
 
 void Algorithm::simplifyGraph()
@@ -193,9 +254,83 @@ void Algorithm::simplifyGraph()
 	} while (change);
 }
 
+void Algorithm::connectRanges()
+{
+	auto it = ranges.begin();
+	auto next = it + 1;
+	while (next != ranges.end()) {
+		if (it->endOrder + 1 == next->startOrder) {
+			connect(it->endNode, next->startNode);
+			next = it + 1;
+		}
+		else {
+			it++;
+			next++;
+		}
+	}
+}
+
+void Algorithm::searchPath(vector<vector<int>>& solutions, vector<int>& currentSolution, vector<bool>& visited, int node, int order, int targetNode, int targetOrder)
+{
+	if (order >= targetOrder) return;
+	if (order == targetOrder - 1) {
+		for (int nd : nodes[node].next) {
+			if (nd == targetNode) {
+				solutions.push_back(currentSolution);
+				break;
+			}
+		}
+		return;
+	}
+
+	for (int nd : nodes[node].next) {
+		if (visited[nd]) continue;
+		if (nodes[nd].order != -1) continue;
+		currentSolution.push_back(nd);
+		visited[nd] = true;
+		searchPath(solutions, currentSolution, visited, nd, order + 1, targetNode, targetOrder);
+		currentSolution.pop_back();
+		visited[nd] = false;
+	}
+}
+
 void Algorithm::findPaths()
 {
-	//
+	auto it = ranges.begin();
+	if (it == ranges.end()) return;
+	auto next = it + 1;
+
+	vector<vector<int>> solutions;
+	vector<int> currentSolution;
+	vector<bool> visited(nodes.size());
+
+	visited.assign(nodes.size(), false);
+
+	while (next != ranges.end()) {
+		solutions.clear();
+		currentSolution.clear();
+		currentSolution.reserve(next->startOrder - it->endOrder + 1);
+		currentSolution.push_back(it->endNode);
+		
+		std::fill(visited.begin(), visited.end(), false);
+
+		searchPath(solutions, currentSolution, visited, it->endNode, it->endOrder, next->startNode, next->startOrder);
+
+		if (solutions.size() != 1) {
+			it++;
+			next = it + 1;
+			continue;
+		}
+
+		currentSolution = solutions[0];
+		currentSolution.push_back(next->startNode);
+
+		for (int i = 0; i + 1 < currentSolution.size(); i++) {
+			connect(currentSolution[i], currentSolution[i + 1]);
+		}
+
+		next = it + 1;
+	}
 }
 
 void Algorithm::printNodes(std::ostream& os)
@@ -211,11 +346,27 @@ void Algorithm::printNodes(std::ostream& os)
 		}
 		os << endl;
 	}
+
+	printRanges(os);
+}
+
+void Algorithm::printRanges(std::ostream& os) {
+	os << "\n\nRanges:";
+	for (auto r : ranges) {
+		os << " " << r.startOrder << "-" << r.endOrder;
+	}
+	os << "\n";
 }
 
 ostream& algorithms::signpost::operator<<(std::ostream& os, const Algorithm& a)
 {
-	//
+	for (int y = 0; y < a.height; y++) {
+		for (int x = 0; x < a.width; x++) {
+			if (x != 0) os << " ";
+			os << a.nodes[y * a.width + x].order + 1;
+		}
+		os << endl;
+	}
 
 	return os;
 }
