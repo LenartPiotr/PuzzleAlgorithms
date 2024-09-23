@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <set>
 
 using namespace std;
 using namespace algorithms::signpost;
@@ -91,6 +92,7 @@ void Algorithm::prepare(std::ifstream& in) {
 
 void Algorithm::processFile(ifstream& inFile, ofstream& outFile) {
 	prepare(inFile);
+	prepareRanges();
 
 	mainLoop();
 
@@ -229,6 +231,43 @@ void Algorithm::connect(int prev, int next)
 			ranges.erase(nextRangeIt);
 		}
 	}
+}
+
+void Algorithm::prepareRanges()
+{
+	auto cmp = [this](int a, int b) { return nodes[a].order < nodes[b].order; };
+	set<int, decltype(cmp)> nodesWithOrder(cmp);
+	
+	for (int i = 0; i < nodes.size(); i++) {
+		if (nodes[i].order != -1) nodesWithOrder.insert(i);
+	}
+
+	Range range{ -10, -10, -10, -10 };
+	
+	int prevNodeIndex;
+	Node* n;
+	Node* prevNode;
+
+	for (auto& i : nodesWithOrder) {
+		n = &nodes[i];
+
+		if (range.endOrder + 1 == n->order) {
+			prevNode->nextNode = i;
+			n->prevNode = prevNodeIndex;
+			range.endOrder = n->order;
+			range.endNode = i;
+		}
+		else {
+			if (range.endNode >= 0) {
+				ranges.push_back(range);
+			}
+			range = { n->order, i, n->order, i };
+		}
+
+		prevNodeIndex = i;
+		prevNode = n;
+	}
+	if (range.startOrder >= 0) ranges.push_back(range);
 }
 
 void Algorithm::simplifyGraph()

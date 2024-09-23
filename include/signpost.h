@@ -8,7 +8,7 @@ using namespace baselib;
 
 namespace algorithms {
 	namespace signpost {
-
+		
 		struct Node {
 			int order;
 			int nextNode;
@@ -48,6 +48,8 @@ namespace algorithms {
 
 			void disconnect(int prev, int next);
 			void connect(int prev, int next);
+
+			void prepareRanges();
 
 			void simplifyGraph();
 			void connectRanges();
